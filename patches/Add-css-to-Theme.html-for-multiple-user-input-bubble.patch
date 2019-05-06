@@ -1,0 +1,38 @@
+From 899c44b4745806cc60915a2f15b5f3f629bff03a Mon Sep 17 00:00:00 2001
+From: "Maureen E. Mirville" <maureen@bestpractical.com>
+Date: Thu, 7 Feb 2019 23:59:22 -0500
+Subject: [PATCH] Add css to Theme.html for multiple user input bubbles
+
+---
+ share/html/Admin/Tools/Theme.html | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/share/html/Admin/Tools/Theme.html b/share/html/Admin/Tools/Theme.html
+index ebc0b1d2f2..277cebba31 100644
+--- a/share/html/Admin/Tools/Theme.html
++++ b/share/html/Admin/Tools/Theme.html
+@@ -127,6 +127,8 @@ my @sections = (
+     ['Button hover' => ['input[type="reset"]:hover, input[type="submit"]:hover, input[class="button"]:hover']],
+     ['Search results' => ['table.collection-as-table th.collection-as-table a']],
+     ['Portlet Text'   => ['.titlebox .titlebox-title .left a, .titlebox .titlebox-title .left']],
++    ['Selected bubble'          => ['.selectize-control.multi .selectize-input [data-value]']],
++    ['Selected bubble (active)' => ['.selectize-control.multi .selectize-input [data-value].active']],
+ );
+ </%ONCE>
+ <script type="text/javascript">
+@@ -191,6 +193,12 @@ jQuery(function($) {
+               if (applying[name].match(/titlebox/))
+                   newcss = "color: " + bg;
+ 
++              if (applying[name].match(/.selectize-control.multi\ .selectize-input\ [data-value]/))
++                  newcss = "color: " + bg;
++
++              if (applying[name].match(/.selectize-control.multi\ .selectize-input\ [data-value].active/))
++                  newcss = "color: " + bg;
++
+               /* Nav doesn't need a background, but it wants text color */
+               if (applying[name].match(/#main-navigation/))
+                   newcss = "color: " + fg;
+-- 
+2.20.1 (Apple Git-117)
+

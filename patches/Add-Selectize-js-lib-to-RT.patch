@@ -1,0 +1,24 @@
+From f81cb0e16aeb74c554df5cbcef32b1ed61d7216f Mon Sep 17 00:00:00 2001
+From: "Maureen E. Mirville" <maureen@bestpractical.com>
+Date: Wed, 16 Jan 2019 15:36:33 -0500
+Subject: [PATCH] Add Selectize js lib to RT
+
+---
+ lib/RT/Interface/Web.pm | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/lib/RT/Interface/Web.pm b/lib/RT/Interface/Web.pm
+index b6ccf6ff7e..cf18b2dfa3 100644
+--- a/lib/RT/Interface/Web.pm
++++ b/lib/RT/Interface/Web.pm
+@@ -116,6 +116,7 @@ sub JSFiles {
+       jquery.modal.min.js
+       jquery.modal-defaults.js
+       jquery.cookie.js
++      selectize.min.js
+       titlebox-state.js
+       i18n.js
+       util.js
+-- 
+2.20.1 (Apple Git-117)
+
