@@ -93,7 +93,7 @@ index cd8ab2b0d4..9fc4d25338 100644
 +                        return '<div class="option">' + escape(data.label) + '</div>';
 +                    },
 +                    item: function(data, escape) {
-+                        return '<div class="item">' + escape(data.value) + '</div>';
++                        return '<div class="item">' + escape(data.label) + '</div>';
 +                    }
 +                },
 +                onItemRemove: function(value) {
