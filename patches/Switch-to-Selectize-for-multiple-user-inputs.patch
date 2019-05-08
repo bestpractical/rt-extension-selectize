@@ -30,10 +30,10 @@ index a1fa20a364..bd046c1e3d 100644
  %   if ($hide_cc_suggestions) {
          <a href="#" class="ToggleSuggestions" data-hide-label="<% $hide_label %>" data-show-label="<% $show_label %>">
 diff --git a/share/static/js/autocomplete.js b/share/static/js/autocomplete.js
-index cd8ab2b0d4..9fc4d25338 100644
+index cd8ab2b0d4..5fc5b75e8c 100644
 --- a/share/static/js/autocomplete.js
 +++ b/share/static/js/autocomplete.js
-@@ -8,6 +8,34 @@ window.RT.Autocomplete.Classes = {
+@@ -8,6 +8,35 @@ window.RT.Autocomplete.Classes = {
      Queues: 'queues'
  };
  
@@ -50,6 +50,7 @@ index cd8ab2b0d4..9fc4d25338 100644
 +                var self = input.selectize()[0].selectize;
 +                var value = ui.item.attr('data-value');
 +                self.createItem(value, false);
++                self.getItem(value).children('span').text(ui.item.children('span').text());
 +                self.getItem(value).insertBefore(ui.item);
 +                ui.item.remove();
 +                self.setCaret(self.items.length);
@@ -68,7 +69,7 @@ index cd8ab2b0d4..9fc4d25338 100644
  window.RT.Autocomplete.bind = function(from) {
  
      jQuery("input[data-autocomplete]", from).each(function(){
-@@ -18,6 +46,62 @@ window.RT.Autocomplete.bind = function(from) {
+@@ -18,6 +47,62 @@ window.RT.Autocomplete.bind = function(from) {
          if (!what || !window.RT.Autocomplete.Classes[what])
              return;
  
@@ -93,7 +94,7 @@ index cd8ab2b0d4..9fc4d25338 100644
 +                        return '<div class="option">' + escape(data.label) + '</div>';
 +                    },
 +                    item: function(data, escape) {
-+                        return '<div class="item">' + escape(data.label) + '</div>';
++                        return '<div class="item">' + '<span>' + escape(data.label) + '</span></div>';
 +                    }
 +                },
 +                onItemRemove: function(value) {
