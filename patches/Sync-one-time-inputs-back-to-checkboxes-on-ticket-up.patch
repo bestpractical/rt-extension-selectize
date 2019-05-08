@@ -1,0 +1,73 @@
+From 24818eb8396242e8573bba566a51daa8eb064a1b Mon Sep 17 00:00:00 2001
+From: sunnavy <sunnavy@bestpractical.com>
+Date: Wed, 27 Feb 2019 23:56:38 +0800
+Subject: [PATCH] Sync one time inputs back to checkboxes on ticket update page
+
+For one-time checkboxes on ticket update page, we update corresponding
+one-time text inputs accordingly when user clicking those checkboxes.
+
+Previously we didn't do it reversely, i.e we don't update those
+checkboxes on text inputs change, which could be surprising for people.
+
+This commit does this "reverse" thing to make things more consistent.
+---
+ share/html/Ticket/Update.html | 43 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 43 insertions(+)
+
+diff --git a/share/html/Ticket/Update.html b/share/html/Ticket/Update.html
+index e7dd715d38..23d79201b4 100644
+--- a/share/html/Ticket/Update.html
++++ b/share/html/Ticket/Update.html
+@@ -258,6 +258,49 @@ jQuery( function() {
+ 
+    jQuery("#ticket-update-metadata :input, #UpdateCc, #UpdateBcc").change( updateScrips );
+ 
++   var syncOneTimeCheckboxes = function() {
++        var emails = jQuery(this).val().split(/,\s*/);
++        var prefix = jQuery(this).attr('id');
++        var type = prefix.replace('Update', '');
++        var checked = 0;
++        var unchecked = 0;
++        jQuery('input:checkbox[name^=' + prefix + ']').each( function() {
++            var name = jQuery(this).attr('name');
++            name = name.replace(prefix + '-', '');
++            var filter_function = function(n,i) {
++                return n.match(new RegExp('^\\s*' + name + '\\s*$', 'i')) || n.match(new RegExp('<\\s*' + name + '\\s*>', 'i'));
++            };
++            if ( jQuery.grep(emails, filter_function).length == 0 ) {
++                unchecked++;
++                if ( jQuery(this).prop('checked') ) {
++                    jQuery(this).prop('checked', false);
++                }
++            }
++            else {
++                checked++;
++                if ( !jQuery(this).prop('checked') ) {
++                    jQuery(this).prop('checked', true);
++                    if ( jQuery('#UpdateIgnoreAddressCheckboxes').val() == 0 ) {
++                        jQuery('#UpdateIgnoreAddressCheckboxes').val(1);
++                    }
++                }
++            }
++        });
++
++        if ( unchecked > 0 ) {
++            if ( jQuery('#AllSuggested' + type).is(':checked') ) {
++                jQuery('#AllSuggested' + type).prop('checked', false);
++            }
++        }
++        else if ( checked > 0 && unchecked == 0 ) {
++            if ( !jQuery('#AllSuggested' + type).is(':checked') ) {
++                jQuery('#AllSuggested' + type).prop('checked', true);
++            }
++        }
++   };
++
++   jQuery("#UpdateCc, #UpdateBcc").change(syncOneTimeCheckboxes);
++
+ });
+ </script>
+ % }
+-- 
+2.20.1 (Apple Git-117)
+

@@ -22,7 +22,7 @@ drag/drop/delete delete them.
 
 =head1 RT VERSION
 
-Works with RT 4.4
+Works with RT 4.4.3+
 
 =head1 INSTALLATION
 
@@ -41,6 +41,11 @@ May need root permissions
     patch -p1 -d /opt/rt4 < patches/Add-Selectize-js-lib-to-RT.patch
     patch -p1 -d /opt/rt4 < patches/Switch-to-Selectize-for-multiple-user-inputs.patch
     patch -p1 -d /opt/rt4 < patches/Add-css-to-Theme.html-for-multiple-user-input-bubble.patch
+
+For RT 4.4.3 - 4.4.4, apply these:
+
+       patch -p1 -d /opt/rt4 < patches/Sync-one-time-inputs-back-to-checkboxes-on-ticket-up.patch
+       patch -p1 -d /opt/rt4 < patches/Defer-AJAX-recipients-update-a-little-bit-to-get-for.patch
 
 =item Edit your F</opt/rt4/etc/RT_SiteConfig.pm>
 

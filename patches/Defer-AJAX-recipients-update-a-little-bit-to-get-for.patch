@@ -1,0 +1,103 @@
+From 035dd991a95e6f466dde8497d488e76998a4b69e Mon Sep 17 00:00:00 2001
+From: sunnavy <sunnavy@bestpractical.com>
+Date: Thu, 21 Feb 2019 03:57:53 +0800
+Subject: [PATCH] Defer AJAX recipients update a little bit to get form's
+ latest status
+
+We fire updateScrips on input changes, including UpdateType, Status,
+Owner, UpdateCc, UpdateBcc, UpdateContent, etc. Most text input changes
+are triggered when we focus on other elements of the page, and things
+become tricky if the other elemnts are recipient checkboxes, e.g.
+
+    1. Add some text to the message body(the plain textarea)
+    2. Check or uncheck one of the checkboxes in recipient list
+
+The 2nd step not only changes the checkbox's status, but as the focus
+changes from textarea to checkbox, updateScrips is also fired.
+
+The bad thing is the focus change happens right before the checkbox
+status change, thus updateScrips is fired a little bit earlier. When we
+serialize inputs in updateScrips, we can only get the old status of the
+checkbox.
+
+This commit fixes this issue by deferring the serialization a little bit
+to get the latest status of the form.
+---
+ share/html/Ticket/Update.html | 59 +++++++++++++++++++----------------
+ 1 file changed, 32 insertions(+), 27 deletions(-)
+
+diff --git a/share/html/Ticket/Update.html b/share/html/Ticket/Update.html
+index e7dd715d38..056b11a32e 100644
+--- a/share/html/Ticket/Update.html
++++ b/share/html/Ticket/Update.html
+@@ -217,35 +217,40 @@ jQuery( function() {
+        jQuery('#recipients div.titlebox-content').addClass('refreshing');
+        jQuery('#previewscrips div.titlebox-content').addClass('refreshing');
+ 
+-       var payload = jQuery('form[name=TicketUpdate]').serializeArray();
+-
+-       jQuery('#recipients div.titlebox-content').load( '<% RT->Config->Get('WebPath')%>/Helpers/ShowSimplifiedRecipients',
+-           payload,
+-           function() {
+-               jQuery('#recipients div.titlebox-content').removeClass('refreshing');
+-               var txn_send_field = jQuery("#recipients input[name=TxnSendMailTo]");
+-               txn_send_field.change( syncCheckboxes );
+-               txn_send_field.click( function () { setCheckbox(this) } );
+-               jQuery("#recipients input[name=TxnSendMailToAll]").click( function() { setCheckbox(this, 'TxnSendMailTo'); } );
+-               if (txn_send_field.length > 0) {
+-                   setCheckbox(txn_send_field[0]);
++       // Wait a little bit in case user leaves related inputs(which
++       // could fire updateScrips) by checking/unchecking recipient
++       // checkboxes, this is to get checkboxes' latest status
++       setTimeout( function() {
++           var payload = jQuery('form[name=TicketUpdate]').serializeArray();
++
++           jQuery('#recipients div.titlebox-content').load( '<% RT->Config->Get('WebPath')%>/Helpers/ShowSimplifiedRecipients',
++               payload,
++               function() {
++                   jQuery('#recipients div.titlebox-content').removeClass('refreshing');
++                   var txn_send_field = jQuery("#recipients input[name=TxnSendMailTo]");
++                   txn_send_field.change( syncCheckboxes );
++                   txn_send_field.click( function () { setCheckbox(this) } );
++                   jQuery("#recipients input[name=TxnSendMailToAll]").click( function() { setCheckbox(this, 'TxnSendMailTo'); } );
++                   if (txn_send_field.length > 0) {
++                       setCheckbox(txn_send_field[0]);
++                   }
+                }
+-           }
+-       );
+-
+-       jQuery('#previewscrips div.titlebox-content').load( '<% RT->Config->Get('WebPath')%>/Helpers/PreviewScrips',
+-           payload,
+-           function() {
+-               jQuery('#previewscrips div.titlebox-content').removeClass('refreshing');
+-               var txn_send_field = jQuery("#previewscrips input[name=TxnSendMailTo]");
+-               txn_send_field.change( syncCheckboxes );
+-               txn_send_field.click( function () { setCheckbox(this) } );
+-               jQuery("#previewscrips input[name=TxnSendMailToAll]").click( function() { setCheckbox(this, 'TxnSendMailTo'); } );
+-               if (txn_send_field.length > 0) {
+-                   setCheckbox(txn_send_field[0]);
++           );
++
++           jQuery('#previewscrips div.titlebox-content').load( '<% RT->Config->Get('WebPath')%>/Helpers/PreviewScrips',
++               payload,
++               function() {
++                   jQuery('#previewscrips div.titlebox-content').removeClass('refreshing');
++                   var txn_send_field = jQuery("#previewscrips input[name=TxnSendMailTo]");
++                   txn_send_field.change( syncCheckboxes );
++                   txn_send_field.click( function () { setCheckbox(this) } );
++                   jQuery("#previewscrips input[name=TxnSendMailToAll]").click( function() { setCheckbox(this, 'TxnSendMailTo'); } );
++                   if (txn_send_field.length > 0) {
++                       setCheckbox(txn_send_field[0]);
++                   }
+                }
+-           }
+-       );
++           );
++       }, 100);
+    };
+    updateScrips();
+ 
+-- 
+2.20.1 (Apple Git-117)
+
