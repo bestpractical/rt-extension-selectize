@@ -18,7 +18,9 @@ MANIFEST			This list of files
 META.yml
 patches/Add-css-to-Theme.html-for-multiple-user-input-bubble.patch
 patches/Add-Selectize-js-lib-to-RT.patch
+patches/Defer-AJAX-recipients-update-a-little-bit-to-get-for.patch
 patches/Switch-to-Selectize-for-multiple-user-inputs.patch
+patches/Sync-one-time-inputs-back-to-checkboxes-on-ticket-up.patch
 README
 static/css/jquery-ui.custom.modified.css
 static/css/selectize.customized.css
