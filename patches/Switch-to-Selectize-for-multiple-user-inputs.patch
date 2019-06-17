@@ -109,7 +109,7 @@ index cd8ab2b0d4..5fc5b75e8c 100644
 +                load: function(input, callback) {
 +                    if (!input.length) return callback();
 +                    jQuery.ajax({
-+                        url: RT.Config.WebPath + '/Helpers/AutoComplete/Users',
++                        url: RT.Config.WebPath + '/Helpers/Autocomplete/Users',
 +                        type: 'GET',
 +                        dataType: 'json',
 +                        data: {
