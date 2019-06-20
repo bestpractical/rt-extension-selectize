@@ -8,29 +8,147 @@ Date:   Thu Apr 18 05:00:28 2019 +0800
     also enhanced it so people can easily move those emails from an input to
     another via drag/drop.
 
+diff --git a/share/html/Elements/EmailInput b/share/html/Elements/EmailInput
+index 078a2870c4..b48abfe0b0 100644
+--- a/share/html/Elements/EmailInput
++++ b/share/html/Elements/EmailInput
+@@ -65,6 +65,7 @@
+ 
+ % if ($AutocompleteMultiple) {
+     data-autocomplete-multiple
++    autocomplete="off"
+ % }
+ 
+ % if ($AutocompleteReturn) {
+@@ -79,6 +80,10 @@
+     data-autocomplete-include-system
+ % }
+ 
++% if (@options) {
++    data-options="<% JSON(\@options) %>"
++% }
++
+ />
+ % if ($EntryHint) {
+ <br>
+@@ -86,6 +91,28 @@
+   <% loc($EntryHint) %>
+ </font></i>
+ % }
++
++<%INIT>
++my @options;
++if ($AutocompleteMultiple) {
++    for my $email ( @$Options, ( split '\s*,\s*', $Default || '' ) ) {
++        next unless $email =~ /\S/;
++        my $json = $m->scomp(
++            '/Helpers/Autocomplete/Users',
++            term => $email,
++            max  => 1,
++            $AutocompleteReturn ? ( return => $AutocompleteReturn ) : (),
++            abort => 0,
++        );
++        if ($json) {
++            if ( my $parsed = JSON::from_json($json) ) {
++                push @options, $parsed->[0];
++            }
++        }
++    }
++}
++</%INIT>
++
+ <%ARGS>
+ $Name
+ $Size    => 40
+@@ -97,4 +124,5 @@ $AutocompleteNobody => 0
+ $AutocompleteSystem => 0
+ $EntryHint => ''
+ $Placeholder => ''
++$Options => []
+ </%ARGS>
+diff --git a/share/html/Helpers/Autocomplete/Users b/share/html/Helpers/Autocomplete/Users
+index bcb5d0ab34..7051a653a0 100644
+--- a/share/html/Helpers/Autocomplete/Users
++++ b/share/html/Helpers/Autocomplete/Users
+@@ -47,7 +47,7 @@
+ %# END BPS TAGGED BLOCK }}}
+ % $r->content_type('application/json; charset=utf-8');
+ <% JSON( \@suggestions ) |n %>
+-% $m->abort;
++% $m->abort if $abort;
+ <%ARGS>
+ $return => ''
+ $term => undef
+@@ -58,6 +58,7 @@ $exclude => ''
+ $op => undef
+ $include_nobody => 0
+ $include_system => 0
++$abort => 1
+ </%ARGS>
+ <%INIT>
+ # Only allow certain return fields
 diff --git a/share/html/Ticket/Elements/UpdateCc b/share/html/Ticket/Elements/UpdateCc
-index a1fa20a364..bd046c1e3d 100644
+index a1fa20a364..f16fb545af 100644
 --- a/share/html/Ticket/Elements/UpdateCc
 +++ b/share/html/Ticket/Elements/UpdateCc
-@@ -49,7 +49,6 @@
+@@ -47,9 +47,9 @@
+ %# END BPS TAGGED BLOCK }}}
+ % $m->callback(CallbackName => 'BeforeCc', ARGSRef => \%ARGS, Ticket => $TicketObj, one_time_Ccs => \@one_time_Ccs, txn_addresses => \%txn_addresses);
  
- <tr><td class="label"><&|/l&>One-time Cc</&>:</td><td><& /Elements/EmailInput, Name => 'UpdateCc', Size => undef, Default => $ARGS{UpdateCc}, AutocompleteMultiple => 1 &>
+-<tr><td class="label"><&|/l&>One-time Cc</&>:</td><td><& /Elements/EmailInput, Name => 'UpdateCc', Size => undef, Default => $ARGS{UpdateCc}, AutocompleteMultiple => 1 &>
++<tr><td class="label"><&|/l&>One-time Cc</&>:</td>
++    <td><& /Elements/EmailInput, Name => 'UpdateCc', Size => undef, Default => $ARGS{UpdateCc}, AutocompleteMultiple => 1, Options => \@one_time_Ccs &>
  <input type="hidden" id="UpdateIgnoreAddressCheckboxes" name="UpdateIgnoreAddressCheckboxes" value="0">
 -        <br />
  
  %if (scalar @one_time_Ccs) {
  %   if ($hide_cc_suggestions) {
-@@ -79,7 +78,7 @@
+@@ -59,7 +59,7 @@
+         <div class="OneTimeCcs hidden">
+ %   }
+ <i class="label">(<&|/l&>check to add</&>)</i>
+-<input type="checkbox" class="checkbox" id="AllSuggestedCc" name="AllSuggestedCc" value="1" onclick="setCheckbox(this, /^UpdateCc-/, null, true)">
++<input type="checkbox" class="checkbox" id="AllSuggestedCc" name="AllSuggestedCc" value="1" autocomplete="off" onclick="setCheckbox(this, /^UpdateCc-/, null, true)">
+ <label for="AllSuggestedCc"><% loc('All recipients') %></label>
+ %}
+ %foreach my $addr ( @one_time_Ccs ) {
+@@ -69,6 +69,7 @@
+     name="UpdateCc-<%$addr%>"
+     class="onetime onetimecc"
+     type="checkbox"
++    autocomplete="off"
+ % my $clean_addr = $txn_addresses{$addr}->format;
+     onClick="checkboxToInput('UpdateCc', <% "UpdateCc-$addr" |n,j%>, <%$clean_addr|n,j%> );"
+     <% $ARGS{'UpdateCc-'.$addr} ? 'checked="checked"' : ''%> >
+@@ -79,7 +80,8 @@
  </div>
  %}
  </td></tr>
 -<tr><td class="label"><&|/l&>One-time Bcc</&>:</td><td><& /Elements/EmailInput, Name => 'UpdateBcc', Size => undef, Default => $ARGS{UpdateBcc}, AutocompleteMultiple => 1 &><br />
-+<tr><td class="label"><&|/l&>One-time Bcc</&>:</td><td><& /Elements/EmailInput, Name => 'UpdateBcc', Size => undef, Default => $ARGS{UpdateBcc}, AutocompleteMultiple => 1 &>
++<tr><td class="label"><&|/l&>One-time Bcc</&>:</td>
++    <td><& /Elements/EmailInput, Name => 'UpdateBcc', Size => undef, Default => $ARGS{UpdateBcc}, AutocompleteMultiple => 1, Options => \@one_time_Ccs &>
  %if (scalar @one_time_Ccs) {
  %   if ($hide_cc_suggestions) {
          <a href="#" class="ToggleSuggestions" data-hide-label="<% $hide_label %>" data-show-label="<% $show_label %>">
+@@ -88,7 +90,7 @@
+         <div class="OneTimeCcs hidden">
+ %   }
+ <i class="label">(<&|/l&>check to add</&>)</i>
+-<input type="checkbox" class="checkbox" id="AllSuggestedBcc" name="AllSuggestedBcc" value="1" onclick="setCheckbox(this, /^UpdateBcc-/, null, true)">
++<input type="checkbox" class="checkbox" id="AllSuggestedBcc" name="AllSuggestedBcc" value="1" autocomplete="off" onclick="setCheckbox(this, /^UpdateBcc-/, null, true)">
+ <label for="AllSuggestedBcc"><% loc('All recipients') %></label>
+ %}
+ %foreach my $addr ( @one_time_Ccs ) {
+@@ -98,6 +100,7 @@
+     name="UpdateBcc-<%$addr%>"
+     class="onetime onetimebcc"
+     type="checkbox"
++    autocomplete="off"
+ % my $clean_addr = $txn_addresses{$addr}->format;
+     onClick="checkboxToInput('UpdateBcc', <% "UpdateBcc-$addr" |n,j%>, <%$clean_addr|n,j%> );"
+     <% $ARGS{'UpdateBcc-'.$addr} ? 'checked="checked"' : ''%> >
 diff --git a/share/static/js/autocomplete.js b/share/static/js/autocomplete.js
-index cd8ab2b0d4..5fc5b75e8c 100644
+index cd8ab2b0d4..1b67413716 100644
 --- a/share/static/js/autocomplete.js
 +++ b/share/static/js/autocomplete.js
 @@ -8,6 +8,35 @@ window.RT.Autocomplete.Classes = {
@@ -69,19 +187,21 @@ index cd8ab2b0d4..5fc5b75e8c 100644
  window.RT.Autocomplete.bind = function(from) {
  
      jQuery("input[data-autocomplete]", from).each(function(){
-@@ -18,6 +47,62 @@ window.RT.Autocomplete.bind = function(from) {
+@@ -18,6 +47,64 @@ window.RT.Autocomplete.bind = function(from) {
          if (!what || !window.RT.Autocomplete.Classes[what])
              return;
  
 +        if (what === 'Users' && input.is('[data-autocomplete-multiple]')) {
++            var options = input.attr('data-options');
 +            input.selectize({
-+                plugins: ['remove_button', 'restore_on_backspace', 'rt_drag_drop'],
++                plugins: ['remove_button', 'rt_drag_drop'],
++                options: options ? JSON.parse(options) : null,
 +                valueField: 'value',
 +                labelField: 'label',
 +                searchField: ['label', 'value'],
 +                create: true,
 +                closeAfterSelect: true,
-+                maxItems: input.is('[data-autocomplete-multiple]') ? null : 1,
++                maxItems: null,
 +                allowEmptyOption: false,
 +                openOnFocus: false,
 +                selectOnTab: true,
@@ -91,10 +211,10 @@ index cd8ab2b0d4..5fc5b75e8c 100644
 +                        return '<div class="create"><strong>' + escape(data.input) + '</strong></div>';
 +                    },
 +                    option: function(data, escape) {
-+                        return '<div class="option">' + escape(data.label) + '</div>';
++                        return '<div class="option">' + (data.selectize_option || escape(data.label)) + '</div>';
 +                    },
 +                    item: function(data, escape) {
-+                        return '<div class="item">' + '<span>' + escape(data.label) + '</span></div>';
++                        return '<div class="item"><span>' + (data.selectize_item || escape(data.label)) + '</span></div>';
 +                    }
 +                },
 +                onItemRemove: function(value) {
