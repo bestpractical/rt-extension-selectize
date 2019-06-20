@@ -1,4 +1,12 @@
 Revision history for RT-Extension-Selectize
 
+0.02 2019-06-20
+
+ - Fix autocomplete URL
+ - Backspace deletes a bubble as a whole
+ - Show labels instead of values(emails) for default values too
+ - Disable browser autocomplete for selectize related inputs
+ - Support selectize_option/selectize_item from json to customize option/item UI
+
 0.01 2019-05-13
  - Initial version

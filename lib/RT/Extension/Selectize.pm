@@ -2,7 +2,7 @@ use strict;
 use warnings;
 package RT::Extension::Selectize;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 RT->AddStyleSheets($_) for qw/selectize.default.css selectize.customized.css/;
 
